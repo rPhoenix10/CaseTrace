@@ -1,0 +1,11 @@
+timestamp,device,user,source_ip,event_type,detail
+2026-10-27T08:45:00Z,workstation-02,asmith,10.0.0.12,AUTH_SUCCESS,routine sign-in
+2026-10-27T08:50:00Z,sensor-gateway-02,system,10.0.0.50,DEVICE_HEALTH,status normal
+2026-10-27T09:00:00Z,workstation-07,jrivera,10.0.0.24,AUTH_FAILURE,invalid password
+2026-10-27T09:01:00Z,workstation-07,jrivera,10.0.0.24,AUTH_FAILURE,invalid password
+2026-10-27T09:02:00Z,workstation-07,jrivera,10.0.0.24,AUTH_FAILURE,invalid password
+2026-10-27T09:03:00Z,workstation-07,jrivera,10.0.0.24,AUTH_SUCCESS,successful sign-in after failures
+2026-10-27T09:04:00Z,workstation-07,jrivera,10.0.0.24,FILE_ACCESS,sensitive_plans.zip opened
+2026-10-27T09:05:00Z,workstation-07,jrivera,10.0.0.24,OUTBOUND_CONNECTION,destination 203.0.113.77
+2026-10-27T09:06:00Z,workstation-07,system,10.0.0.24,DEVICE_WARNING,network adapter reset unexpectedly
+2026-10-27T09:07:00Z,workstation-07,,10.0.0.24,AUTH_FAILURE,missing user field
