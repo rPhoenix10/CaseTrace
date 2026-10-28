@@ -5,7 +5,7 @@ REQUIRED_FIELDS = (
     "timestamp",
     "device",
     "user",
-    "sourece_ip",
+    "source_ip",
     "event_type",
     "detail",
 )
@@ -37,3 +37,32 @@ def load_events(path):
             events.append(event)
 
     return sorted(events, key=lambda event: event["timestamp"]), skipped
+
+def baseline_findings(events):
+    return [
+        event
+        for event in events
+        if event["event_type"] in SUSPICIOUS_TYPES
+    ]
+    
+
+def main():
+    source_path = Path("data/case_log.csv")
+
+    if not source_path.exists():
+        print("ERROR: data/case_log.csv was not found.")
+        return 1
+
+    events, skipped = load_events(source_path)
+    findings = baseline_findings(events)
+    print(f"Loaded {len(events)} valid events; skipped {skipped} malformed row(s).")
+    print(f"Baseline findings: {len(findings)} individual suspicious events(s).")
+    print("Baseline result: individual suspicious events found, "
+          "but no coordinated incident was identified."
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+    
