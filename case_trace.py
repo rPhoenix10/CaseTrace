@@ -1,7 +1,7 @@
 import csv
 from pathlib import Path
 
-REQIRED_FIELDS = (
+REQUIRED_FIELDS = (
     "timestamp",
     "device",
     "user",
@@ -16,8 +16,24 @@ SUSPICIOUS_TYPES = {
     "OUTBOUND_CONNECTION",
 }
 
-def baseline_findings(events):
-    return [
-        eventsfor event in events
-         event["event_type"] in SUSPICIOUS_TYPES
-    ]
+def load_events(path):
+    events = []
+    skipped = 0
+
+    with path.open(mode="r", encoding="utf-8", newline="") as source:
+        reader = csv.DictReader(source)
+        for row in reader:
+            is_valid = row and all(
+                (row.get(field) or "").strip() for field in REQUIRED_FIELDS
+            )
+            if not is_valid:
+                skipped += 1
+                continue
+
+            event = {
+                field: row[field].strip()
+                for field in REQUIRED_FIELDS
+            }
+            events.append(event)
+
+    return sorted(events, key=lambda event: event["timestamp"]), skipped
