@@ -45,6 +45,15 @@ def baseline_findings(events):
         if event["event_type"] in SUSPICIOUS_TYPES
     ]
     
+def correlate_incident(events):
+    users = sorted({event["user"] for event in events})
+
+    for user in users:
+        users_events = [event for event in events if event["user"] == user]
+        failures = [event for event in users_events if event["event_type"] == "AUTH_FAILURE"]
+        success = [event for event in users_events if event["event_type"] == "AUTH_SUCCESS"]
+
+        return None
 
 def main():
     source_path = Path("data/case_log.csv")
@@ -60,6 +69,16 @@ def main():
     print("Baseline result: individual suspicious events found, "
           "but no coordinated incident was identified."
     )
+
+    incident = correlate_incident(events)
+    if incident:
+        print(
+            f"Correlated incident: {incident['severity']} severity for "
+            f"{incident['user']} on {incident['device']}."
+        )
+    else:
+        print("Correlated incident: none.")
+        
     return 0
 
 
