@@ -1,6 +1,7 @@
 import csv
 from pathlib import Path
 
+
 REQUIRED_FIELDS = (
     "timestamp",
     "device",
@@ -15,6 +16,7 @@ SUSPICIOUS_TYPES = {
     "FILE_ACCESS",
     "OUTBOUND_CONNECTION",
 }
+
 
 def load_events(path):
     events = []
@@ -38,22 +40,48 @@ def load_events(path):
 
     return sorted(events, key=lambda event: event["timestamp"]), skipped
 
+
 def baseline_findings(events):
     return [
         event
         for event in events
         if event["event_type"] in SUSPICIOUS_TYPES
     ]
+
     
 def correlate_incident(events):
     users = sorted({event["user"] for event in events})
 
     for user in users:
-        users_events = [event for event in events if event["user"] == user]
-        failures = [event for event in users_events if event["event_type"] == "AUTH_FAILURE"]
-        success = [event for event in users_events if event["event_type"] == "AUTH_SUCCESS"]
+        user_events = [event for event in events if event["user"] == user]
+        failures = [event for event in user_events if event["event_type"] == "AUTH_FAILURE"]
+        successes = [event for event in user_events if event["event_type"] == "AUTH_SUCCESS"]
 
-        return None
+        for success in successes:
+            device = success["device"]
+            earlier_failures = [event for event in failures if event["device"] == device and event["timestamp"] < success["timestamp"]]
+            sensitive_accesses = [event for event in user_events if event["device"] == device and event["event_type"] == "FILE_ACCESS" and event["timestamp"] > success["timestamp"]]
+
+            if len(earlier_failures) < 3 or not sensitive_accesses:
+                continue
+
+            sensitive_access = sensitive_accesses[0]
+            outbound_connections = [event for event in user_events if event["device"] == device and event["event_type"] == "OUTBOUND_CONNECTION" and event["timestamp"] > sensitive_access["timestamp"]]
+
+            if outbound_connections:
+                return {
+                    "severity": "HIGH",
+                    "user": user,
+                    "device": device,
+                    "reason": ("Three authentification failures were followed by a success,"
+                                "sensitive file access, and an outbound connection."
+                    ),
+                    "evidence": (earlier_failures + [success, sensitive_access, outbound_connections[0]]
+                    ),
+                }
+            
+    return None
+
 
 def main():
     source_path = Path("data/case_log.csv")
