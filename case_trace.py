@@ -1,4 +1,5 @@
 import csv
+import hashlib
 from pathlib import Path
 
 
@@ -83,8 +84,44 @@ def correlate_incident(events):
     return None
 
 
+# Read source file as bytes and return as text
+def integrity_hash(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def build_report(source_path, events, skipped, findings, incident, digest):
+    lines = [
+        "# CaseTrace Investigation Report",
+        "",
+        "Scope: Synthetic training data only.",
+        f"Evidence source: '{source_path.as_posix()}'",
+        f"SHA-256: '{digest}'",
+        f"Valid events: {len(events)}",
+        f"Malformed rows skipped: {skipped}",
+        f"Baseline findings: {len(findings)}",
+        "",
+        "## Correlated conclusion",
+        "",
+    ]
+
+    if incident:
+        lines.extend(
+            [
+                f"Severity: {incident['severity']}",
+                f"User: {incident['user']}",
+                f"Device: {incident['device']}",
+                f"Reason: {incident['reason']}",
+            ]
+        )
+    else: lines.append("no corrdinated incident identified.")
+
+    return "\n".join(lines) + "\n"
+
+
 def main():
     source_path = Path("data/case_log.csv")
+    report_path = Path("output/investigation_report.md")
+    hash_path = Path("output/evidence_hash.sha256")
 
     if not source_path.exists():
         print("ERROR: data/case_log.csv was not found.")
@@ -107,6 +144,26 @@ def main():
     else:
         print("Correlated incident: none.")
         
+    digest = integrity_hash(source_path)
+    report = build_report(
+        source_path,
+        events,
+        skipped,
+        findings,
+        incident,
+        digest,
+    )
+
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(report, encoding="utf-8")
+    hash_path.write_text(
+        f"{digest} {source_path.as_posix()}\n",
+        encoding="utf-8",
+    )
+
+    print(f"Integrity record: {hash_path.as_posix()}")
+    print(f"Report written: {report_path.as_posix()}")
+    
     return 0
 
 
