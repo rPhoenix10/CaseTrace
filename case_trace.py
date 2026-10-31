@@ -115,6 +115,23 @@ def build_report(source_path, events, skipped, findings, incident, digest):
         )
     else: lines.append("no corrdinated incident identified.")
 
+    lines.extend(["", "## Timeline", ""])
+    for event in events:
+        lines.append(
+            f"- {event['timestamp']} | {event['device']} | "
+            f"{event['user']} | {event['event_type']} |{event['detail']}"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Limitations",
+            "",
+            "This educational rule set analyzes one known CSV schema and does not "
+            "establish identity, intent, or legal conclusions.",
+        ]
+    )
+
     return "\n".join(lines) + "\n"
 
 
